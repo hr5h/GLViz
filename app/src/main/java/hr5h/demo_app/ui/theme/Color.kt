@@ -1,4 +1,4 @@
-package hr5h.glviz.ui.theme
+package hr5h.demo_app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

@@ -19,7 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import hr5h.glviz.ui.theme.Purple40
+import hr5h.demo_app.ui.theme.Purple40
 
 @Composable
 fun ChipGroup(

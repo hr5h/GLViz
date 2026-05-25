@@ -10,59 +10,39 @@ class SceneDsl {
 
 class OpenGLSceneScope {
   -shapes: MutableList~ShapeDescription~
-  +Triangle(name, block)
-  +Square(name, block)
-  +Cube(name, block)
-  +Pyramid(name, block)
-  +Model(vertices, name, color, block)
-  -addShape(type, name, block)
+  +Triangle(block)
+  +Square(block)
+  +Cube(block)
+  +Pyramid(block)
+  +Model(vertices, color, block)
+  -addShape(type, block)
 }
 
 class ShapeTransformScope {
-  -transforms: MutableList~Transform~
-  +translate(dx, dy, dz)
-  +rotate(angle, x, y, z)
-  +scale(sx, sy, sz)
-  +applyAll(source)
+  -transformState: TransformState
+  +translate(x, y, z)
+  +rotate(x, y, z)
+  +scale(x, y, z)
+  +applyTransformState(state)
 }
 
 class ShapeDescription {
   +type: ShapeType
-  +displayName: String
-  +transforms: List~Transform~
+  +transformState: TransformState
   +customVertices: FloatArray?
   +customColor: FloatArray?
   +buildModelMatrix(): FloatArray
 }
 
-class Transform {
-  <<sealed>>
+class TransformState {
+  +translation: Vector3
+  +rotation: Vector3
+  +scale: Vector3
+  +buildModelMatrix(): FloatArray
 }
-class Translate {
-  +dx: Float
-  +dy: Float
-  +dz: Float
-}
-class Rotate {
-  +angle: Float
-  +x: Float
-  +y: Float
-  +z: Float
-}
-class Scale {
-  +sx: Float
-  +sy: Float
-  +sz: Float
-}
-
-Transform <|-- Translate
-Transform <|-- Rotate
-Transform <|-- Scale
 
 OpenGLSceneScope "1" o-- "*" ShapeDescription
 OpenGLSceneScope ..> ShapeTransformScope
 ShapeDescription --> ShapeType
-ShapeDescription --> Transform
-OpenGLSceneScope ..> SceneDsl
-ShapeTransformScope ..> SceneDsl
+ShapeDescription --> TransformState
 ```

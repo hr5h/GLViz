@@ -18,15 +18,17 @@ class SceneShape {
 
 class ShapeDescription {
   +type: ShapeType
-  +displayName: String
-  +transforms: List~Transform~
+  +transformState: TransformState
   +customVertices: FloatArray?
   +customColor: FloatArray?
   +buildModelMatrix(): FloatArray
 }
 
-class Transform {
-  <<sealed>>
+class TransformState {
+  +translation: Vector3
+  +rotation: Vector3
+  +scale: Vector3
+  +buildModelMatrix(): FloatArray
 }
 class ShapeData {
   +vertexBuffer: FloatBuffer
@@ -37,6 +39,6 @@ class ShapeData {
 
 Scene "1" o-- "*" SceneShape
 SceneShape --> ShapeData
-ShapeDescription --> Transform
+ShapeDescription --> TransformState
 ShapeDescription --> ShapeType
 ```

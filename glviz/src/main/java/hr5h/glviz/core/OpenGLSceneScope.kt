@@ -1,6 +1,5 @@
 package hr5h.glviz.core
 
-import android.opengl.Matrix
 import hr5h.glviz.shapes.ShapeType
 
 @DslMarker
@@ -8,72 +7,60 @@ annotation class SceneDsl
 
 @SceneDsl
 class ShapeTransformScope internal constructor() {
-    internal val transforms = mutableListOf<Transform>()
+    internal var transformState: TransformState = TransformState()
+        private set
 
-    fun translate(dx: Float, dy: Float, dz: Float) {
-        transforms.add(Transform.Translate(dx, dy, dz))
+    fun translate(x: Float = 0f, y: Float = 0f, z: Float = 0f) {
+        transformState = transformState.translate(x, y, z)
     }
 
-    fun rotate(angle: Float, x: Float, y: Float, z: Float) {
-        transforms.add(Transform.Rotate(angle, x, y, z))
+    fun rotate(x: Float = 0f, y: Float = 0f, z: Float = 0f) {
+        transformState = transformState.rotate(x, y, z)
     }
 
-    fun scale(sx: Float, sy: Float, sz: Float) {
-        transforms.add(Transform.Scale(sx, sy, sz))
+    fun scale(x: Float = 1f, y: Float = 1f, z: Float = 1f) {
+        transformState = transformState.scale(x, y, z)
     }
 
-    fun applyAll(source: List<Transform>) {
-        transforms.addAll(source)
+    fun applyTransformState(state: TransformState) {
+        transformState = state
     }
 }
 
 class ShapeDescription internal constructor(
     val type: ShapeType,
-    val displayName: String,
-    val transforms: List<Transform> = emptyList(),
+    val transformState: TransformState = TransformState(),
     val customVertices: FloatArray? = null,
     val customColor: FloatArray? = null,
     val customVertexColors: FloatArray? = null,
     val customTexCoords: FloatArray? = null,
     val customTexturePath: String? = null,
 ) {
-    fun buildModelMatrix(): FloatArray {
-        val matrix = FloatArray(16)
-        Matrix.setIdentityM(matrix, 0)
-        for (t in transforms) {
-            when (t) {
-                is Transform.Translate -> Matrix.translateM(matrix, 0, t.dx, t.dy, t.dz)
-                is Transform.Rotate -> Matrix.rotateM(matrix, 0, t.angle, t.x, t.y, t.z)
-                is Transform.Scale -> Matrix.scaleM(matrix, 0, t.sx, t.sy, t.sz)
-            }
-        }
-        return matrix
-    }
+    fun buildModelMatrix(): FloatArray = transformState.buildModelMatrix()
 }
 
 @SceneDsl
 class OpenGLSceneScope internal constructor() {
     internal val shapes = mutableListOf<ShapeDescription>()
 
-    fun Triangle(name: String = "Треугольник", block: ShapeTransformScope.() -> Unit = {}) {
-        addShape(ShapeType.TRIANGLE, name, block)
+    fun Triangle(block: ShapeTransformScope.() -> Unit = {}) {
+        addShape(ShapeType.TRIANGLE, block)
     }
 
-    fun Square(name: String = "Квадрат", block: ShapeTransformScope.() -> Unit = {}) {
-        addShape(ShapeType.SQUARE, name, block)
+    fun Square(block: ShapeTransformScope.() -> Unit = {}) {
+        addShape(ShapeType.SQUARE, block)
     }
 
-    fun Cube(name: String = "Куб", block: ShapeTransformScope.() -> Unit = {}) {
-        addShape(ShapeType.CUBE, name, block)
+    fun Cube(block: ShapeTransformScope.() -> Unit = {}) {
+        addShape(ShapeType.CUBE, block)
     }
 
-    fun Pyramid(name: String = "Пирамида", block: ShapeTransformScope.() -> Unit = {}) {
-        addShape(ShapeType.PYRAMID, name, block)
+    fun Pyramid(block: ShapeTransformScope.() -> Unit = {}) {
+        addShape(ShapeType.PYRAMID, block)
     }
 
     fun Model(
         vertices: FloatArray,
-        name: String = "Модель",
         color: FloatArray = floatArrayOf(0.7f, 0.5f, 0.3f, 1f),
         vertexColors: FloatArray? = null,
         texCoords: FloatArray? = null,
@@ -84,8 +71,7 @@ class OpenGLSceneScope internal constructor() {
         shapes.add(
             ShapeDescription(
                 type = ShapeType.MODEL,
-                displayName = name,
-                transforms = scope.transforms.toList(),
+                transformState = scope.transformState,
                 customVertices = vertices,
                 customColor = color,
                 customVertexColors = vertexColors,
@@ -95,13 +81,12 @@ class OpenGLSceneScope internal constructor() {
         )
     }
 
-    private fun addShape(type: ShapeType, name: String, block: ShapeTransformScope.() -> Unit) {
+    private fun addShape(type: ShapeType, block: ShapeTransformScope.() -> Unit) {
         val scope = ShapeTransformScope().apply(block)
         shapes.add(
             ShapeDescription(
                 type = type,
-                displayName = name,
-                transforms = scope.transforms.toList(),
+                transformState = scope.transformState,
             )
         )
     }

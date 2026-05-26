@@ -2,29 +2,33 @@
 
 ```mermaid
 flowchart LR
-  subgraph UI["ui layer (Compose)"]
+  subgraph UI["app / ui layer (Compose)"]
     MainActivity["MainActivity"]
     MainScreen["MainScreen"]
+    SceneObjectState["SceneObjectState (sealed)"]
     ChipGroup["components/ChipGroup"]
     Theme["ui/theme/*"]
   end
 
-  subgraph DSL["glviz DSL layer"]
-    OpenGLScene["OpenGLScene (@Composable bridge)"]
+  subgraph Bridge["glviz / compose bridge"]
+    OpenGLScene["OpenGLScene (@Composable)"]
+  end
+
+  subgraph DSL["glviz / DSL layer"]
     OpenGLSceneScope["OpenGLSceneScope"]
     ShapeTransformScope["ShapeTransformScope"]
     ShapeDescription["ShapeDescription"]
-    Transform["Transform (sealed)"]
+    TransformState["TransformState + Vector3"]
     ShapeType["ShapeType (enum)"]
   end
 
-  subgraph Render["OpenGL render layer"]
+  subgraph Render["glviz / OpenGL render layer"]
     GLRenderer["GLRenderer (GLSurfaceView.Renderer)"]
     Scene["Scene"]
     SceneShape["SceneShape"]
   end
 
-  subgraph Geometry["geometry contracts and primitives"]
+  subgraph Geometry["glviz / geometry contracts and primitives"]
     ShapeDefinition["ShapeDefinition (sealed interface)"]
     ShapeData["ShapeData"]
     Triangle["TriangleShape"]
@@ -33,32 +37,34 @@ flowchart LR
     Pyramid["PyramidShape"]
   end
 
-  subgraph Models["model loading"]
-    ObjLoader["ObjLoader (OBJ parser)"]
+  subgraph Models["glviz / model loading"]
+    ObjLoader["ObjLoader"]
+    ObjMeshData["ObjMeshData"]
   end
 
   MainActivity --> MainScreen
   MainScreen --> ChipGroup
   MainScreen --> Theme
-
+  MainScreen --> SceneObjectState
   MainScreen --> OpenGLScene
   MainScreen --> ObjLoader
   MainScreen --> ShapeType
-  MainScreen --> Transform
+
+  SceneObjectState --> TransformState
+  SceneObjectState --> ShapeType
 
   OpenGLScene --> OpenGLSceneScope
   OpenGLScene --> GLRenderer
   OpenGLSceneScope --> ShapeTransformScope
   OpenGLSceneScope --> ShapeDescription
-  ShapeDescription --> Transform
+  ShapeDescription --> TransformState
   ShapeDescription --> ShapeType
 
   GLRenderer --> Scene
-  Scene --> SceneShape
-  SceneShape --> ShapeData
-
   GLRenderer --> ShapeDefinition
   GLRenderer --> ShapeDescription
+  Scene --> SceneShape
+  SceneShape --> ShapeData
 
   ShapeDefinition --> ShapeData
   Triangle -.implements.-> ShapeDefinition
@@ -66,5 +72,7 @@ flowchart LR
   Cube -.implements.-> ShapeDefinition
   Pyramid -.implements.-> ShapeDefinition
 
-  ObjLoader --> MainScreen
+  ObjLoader --> ObjMeshData
+  ObjMeshData --> SceneObjectState
+  SceneObjectState --> OpenGLSceneScope
 ```

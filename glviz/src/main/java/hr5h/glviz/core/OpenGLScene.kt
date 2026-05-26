@@ -15,10 +15,7 @@ import androidx.compose.ui.viewinterop.AndroidView
  *
  * ```
  * OpenGLScene(modifier = Modifier.fillMaxSize()) {
- *     Triangle {
- *         translate(1f, 0f, 0f)
- *         rotate(45f, 0f, 1f, 0f)
- *     }
+ *     Model("models/cat.obj", "models/cat.png")
  *     Cube {
  *         scale(0.5f, 0.5f, 0.5f)
  *     }
@@ -35,7 +32,7 @@ fun OpenGLScene(
     val currentContent by rememberUpdatedState(content)
 
     SideEffect {
-        val scope = OpenGLSceneScope().apply(currentContent)
+        val scope = OpenGLSceneScope(context.assets).apply(currentContent)
         renderer.syncScene(scope.shapes)
     }
 

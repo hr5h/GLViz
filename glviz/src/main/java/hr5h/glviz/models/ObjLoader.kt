@@ -1,6 +1,7 @@
 package hr5h.glviz.models
 
 import android.content.Context
+import android.content.res.AssetManager
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -37,14 +38,20 @@ data class ObjMeshData(
 
 object ObjLoader {
 
-    fun load(context: Context, assetPath: String): ObjMeshData? {
+    private val cache = mutableMapOf<String, ObjMeshData>()
+
+    fun load(context: Context, assetPath: String): ObjMeshData? =
+        load(context.assets, assetPath)
+
+    fun load(assetManager: AssetManager, assetPath: String): ObjMeshData? {
+        cache[assetPath]?.let { return it }
         return try {
-            context.assets.open(assetPath).use { input ->
+            assetManager.open(assetPath).use { input ->
                 BufferedReader(InputStreamReader(input)).use { reader ->
-                    parseObj(reader)
+                    parseObj(reader).also { cache[assetPath] = it }
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }

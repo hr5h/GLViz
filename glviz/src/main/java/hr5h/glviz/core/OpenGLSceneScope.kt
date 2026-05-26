@@ -1,5 +1,7 @@
 package hr5h.glviz.core
 
+import android.content.res.AssetManager
+import hr5h.glviz.models.ObjLoader
 import hr5h.glviz.shapes.ShapeType
 
 @DslMarker
@@ -40,7 +42,9 @@ class ShapeDescription internal constructor(
 }
 
 @SceneDsl
-class OpenGLSceneScope internal constructor() {
+class OpenGLSceneScope internal constructor(
+    private val assetManager: AssetManager,
+) {
     internal val shapes = mutableListOf<ShapeDescription>()
 
     fun Triangle(block: ShapeTransformScope.() -> Unit = {}) {
@@ -60,22 +64,23 @@ class OpenGLSceneScope internal constructor() {
     }
 
     fun Model(
-        vertices: FloatArray,
-        color: FloatArray = floatArrayOf(0.7f, 0.5f, 0.3f, 1f),
-        vertexColors: FloatArray? = null,
-        texCoords: FloatArray? = null,
+        modelPath: String,
         texturePath: String? = null,
-        block: ShapeTransformScope.() -> Unit = {}
+        color: FloatArray = floatArrayOf(0.7f, 0.5f, 0.3f, 1f),
+        block: ShapeTransformScope.() -> Unit = {},
     ) {
+        val mesh = ObjLoader.load(assetManager, modelPath) ?: return
+        if (mesh.vertices.size < 9) return
+
         val scope = ShapeTransformScope().apply(block)
         shapes.add(
             ShapeDescription(
                 type = ShapeType.MODEL,
                 transformState = scope.transformState,
-                customVertices = vertices,
+                customVertices = mesh.vertices,
                 customColor = color,
-                customVertexColors = vertexColors,
-                customTexCoords = texCoords,
+                customVertexColors = mesh.vertexColors,
+                customTexCoords = mesh.texCoords,
                 customTexturePath = texturePath,
             )
         )

@@ -14,7 +14,7 @@ class OpenGLSceneScope {
   +Square(block)
   +Cube(block)
   +Pyramid(block)
-  +Model(vertices, color, block)
+  +Model(vertices, color, vertexColors, texCoords, texturePath, block)
   -addShape(type, block)
 }
 
@@ -31,6 +31,9 @@ class ShapeDescription {
   +transformState: TransformState
   +customVertices: FloatArray?
   +customColor: FloatArray?
+  +customVertexColors: FloatArray?
+  +customTexCoords: FloatArray?
+  +customTexturePath: String?
   +buildModelMatrix(): FloatArray
 }
 
@@ -38,11 +41,33 @@ class TransformState {
   +translation: Vector3
   +rotation: Vector3
   +scale: Vector3
+  +translate(x, y, z): TransformState
+  +rotate(x, y, z): TransformState
+  +scale(x, y, z): TransformState
   +buildModelMatrix(): FloatArray
 }
 
+class Vector3 {
+  +x: Float
+  +y: Float
+  +z: Float
+}
+
+class ShapeType {
+  <<enumeration>>
+  TRIANGLE
+  SQUARE
+  CUBE
+  PYRAMID
+  MODEL
+}
+
 OpenGLSceneScope "1" o-- "*" ShapeDescription
-OpenGLSceneScope ..> ShapeTransformScope
-ShapeDescription --> ShapeType
+OpenGLSceneScope ..> ShapeTransformScope : creates per shape
+ShapeTransformScope --> TransformState
 ShapeDescription --> TransformState
+ShapeDescription --> ShapeType
+TransformState --> Vector3
+OpenGLSceneScope ..> SceneDsl
+ShapeTransformScope ..> SceneDsl
 ```

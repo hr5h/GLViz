@@ -28,13 +28,11 @@ sealed class SceneObjectState {
     }
 
     data class Model(
-        override val type: ShapeType = ShapeType.MODEL,
-        val vertices: FloatArray,
-        val vertexColors: FloatArray? = null,
-        val texCoords: FloatArray? = null,
+        val modelPath: String,
         val texturePath: String? = null,
         override val transformState: TransformState = TransformState(),
     ) : SceneObjectState() {
+        override val type: ShapeType = ShapeType.MODEL
 
         override fun withTransformState(state: TransformState): SceneObjectState =
             copy(transformState = state)

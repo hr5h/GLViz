@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
@@ -20,22 +21,16 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import hr5h.demo_app.components.ChipGroup
 import hr5h.glviz.core.OpenGLScene
-import hr5h.glviz.models.ObjLoader
 import hr5h.glviz.shapes.ShapeType
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 private inline fun SnapshotStateList<SceneObjectState>.updateObject(
     index: Int,
@@ -50,8 +45,6 @@ private inline fun SnapshotStateList<SceneObjectState>.updateObject(
 fun MainScreen(
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     val modelPath = "models/cube.obj"
     val modelTexturePath = "models/cube.png"
 
@@ -114,9 +107,7 @@ fun MainScreen(
                     }
 
                     is SceneObjectState.Model -> Model(
-                        vertices = obj.vertices,
-                        vertexColors = obj.vertexColors,
-                        texCoords = obj.texCoords,
+                        modelPath = obj.modelPath,
                         texturePath = obj.texturePath,
                     ) {
                         applyTransformState(obj.transformState)
@@ -134,22 +125,8 @@ fun MainScreen(
 
             sceneObjects.clear()
             if (selected == "Модель") {
-                coroutineScope.launch {
-                    val mesh = withContext(Dispatchers.IO) { ObjLoader.load(context, modelPath) }
-                    withContext(Dispatchers.Main) {
-                        if (mesh != null && mesh.vertices.size >= 9) {
-                            sceneObjects.add(
-                                SceneObjectState.Model(
-                                    vertices = mesh.vertices,
-                                    vertexColors = mesh.vertexColors,
-                                    texCoords = mesh.texCoords,
-                                    texturePath = modelTexturePath,
-                                )
-                            )
-                            selectedObjectIndex = 0
-                        }
-                    }
-                }
+                sceneObjects.add(SceneObjectState.Model(modelPath, modelTexturePath))
+                selectedObjectIndex = 0
             } else {
                 val type = ShapeType.valueOf(selected)
                 sceneObjects.add(SceneObjectState.Shape(type))
@@ -198,23 +175,8 @@ fun MainScreen(
             Button(
                 onClick = {
                     if (selectedShapeType == "Модель") {
-                        coroutineScope.launch {
-                            val mesh =
-                                withContext(Dispatchers.IO) { ObjLoader.load(context, modelPath) }
-                            withContext(Dispatchers.Main) {
-                                if (mesh != null && mesh.vertices.size >= 9) {
-                                    sceneObjects.add(
-                                        SceneObjectState.Model(
-                                            vertices = mesh.vertices,
-                                            vertexColors = mesh.vertexColors,
-                                            texCoords = mesh.texCoords,
-                                            texturePath = modelTexturePath,
-                                        )
-                                    )
-                                    selectedObjectIndex = sceneObjects.size - 1
-                                }
-                            }
-                        }
+                        sceneObjects.add(SceneObjectState.Model(modelPath, modelTexturePath))
+                        selectedObjectIndex = sceneObjects.size - 1
                     } else {
                         val type = ShapeType.valueOf(selectedShapeType)
                         sceneObjects.add(SceneObjectState.Shape(type))

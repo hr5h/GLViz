@@ -9,12 +9,13 @@ class SceneDsl {
 }
 
 class OpenGLSceneScope {
-  -shapes: MutableList~ShapeDescription~
+  -shapes: MutableList~SceneShape~
+  -shapeDefinitions: Map~ShapeType, ShapeDefinition~
   +Triangle(block)
   +Square(block)
   +Cube(block)
   +Pyramid(block)
-  +Model(vertices, color, vertexColors, texCoords, texturePath, block)
+  +Model(modelPath, texturePath, color, block)
   -addShape(type, block)
 }
 
@@ -26,15 +27,9 @@ class ShapeTransformScope {
   +applyTransformState(state)
 }
 
-class ShapeDescription {
-  +type: ShapeType
-  +transformState: TransformState
-  +customVertices: FloatArray?
-  +customColor: FloatArray?
-  +customVertexColors: FloatArray?
-  +customTexCoords: FloatArray?
-  +customTexturePath: String?
-  +buildModelMatrix(): FloatArray
+class SceneShape {
+  +shapeData: ShapeData
+  +modelMatrix: FloatArray
 }
 
 class TransformState {
@@ -62,12 +57,29 @@ class ShapeType {
   MODEL
 }
 
-OpenGLSceneScope "1" o-- "*" ShapeDescription
+class ShapeDefinition {
+  <<sealed interface>>
+  +createShapeDataList(): List~ShapeData~
+}
+
+class ShapeData {
+  +createShapeData(...): ShapeData
+}
+
+class ObjLoader {
+  +load(assetManager, assetPath): ObjMeshData?
+}
+
+OpenGLSceneScope "1" o-- "*" SceneShape
 OpenGLSceneScope ..> ShapeTransformScope : creates per shape
+OpenGLSceneScope --> ShapeDefinition : primitives
+OpenGLSceneScope --> ShapeData : via ShapeDefinition / Model()
+OpenGLSceneScope --> ObjLoader : Model()
+SceneShape --> ShapeData
 ShapeTransformScope --> TransformState
-ShapeDescription --> TransformState
-ShapeDescription --> ShapeType
 TransformState --> Vector3
 OpenGLSceneScope ..> SceneDsl
 ShapeTransformScope ..> SceneDsl
+
+note for OpenGLSceneScope "Builds ready SceneShape list\nin SideEffect (Compose thread)."
 ```

@@ -17,7 +17,6 @@ class SceneObjectState_Model {
 class OpenGLScene
 class OpenGLSceneScope
 class ShapeTransformScope
-class ShapeDescription
 class TransformState
 class Vector3
 class GLRenderer
@@ -36,7 +35,6 @@ SceneObjectState <|-- SceneObjectState_Model
 
 MainScreen --> SceneObjectState : mutableStateListOf
 MainScreen --> OpenGLScene : DSL content lambda
-MainScreen --> ObjLoader : load OBJ from assets
 MainScreen --> ShapeType
 
 SceneObjectState --> TransformState
@@ -46,18 +44,18 @@ OpenGLScene --> OpenGLSceneScope : build DSL scope
 OpenGLScene --> GLRenderer : syncScene(shapes)
 
 OpenGLSceneScope --> ShapeTransformScope
-OpenGLSceneScope --> ShapeDescription
-ShapeDescription --> ShapeType
-ShapeDescription --> TransformState
+OpenGLSceneScope --> SceneShape : builds list
+OpenGLSceneScope --> ShapeDefinition : primitives
+OpenGLSceneScope --> ShapeData
+OpenGLSceneScope --> ObjLoader : Model()
 TransformState --> Vector3
 
 GLRenderer --> Scene
-GLRenderer --> ShapeDefinition
-GLRenderer --> ShapeDescription
+GLRenderer --> SceneShape : pending sync
 Scene --> SceneShape
 SceneShape --> ShapeData
 ShapeDefinition --> ShapeData
 
 ObjLoader --> ObjMeshData
-MainScreen --> ObjMeshData : builds SceneObjectState.Model
+OpenGLSceneScope --> ObjMeshData : Model()
 ```

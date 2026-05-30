@@ -17,15 +17,14 @@ flowchart LR
   subgraph DSL["glviz / DSL layer"]
     OpenGLSceneScope["OpenGLSceneScope"]
     ShapeTransformScope["ShapeTransformScope"]
-    ShapeDescription["ShapeDescription"]
     TransformState["TransformState + Vector3"]
     ShapeType["ShapeType (enum)"]
+    SceneShape["SceneShape"]
   end
 
   subgraph Render["glviz / OpenGL render layer"]
     GLRenderer["GLRenderer (GLSurfaceView.Renderer)"]
     Scene["Scene"]
-    SceneShape["SceneShape"]
   end
 
   subgraph Geometry["glviz / geometry contracts and primitives"]
@@ -47,7 +46,6 @@ flowchart LR
   MainScreen --> Theme
   MainScreen --> SceneObjectState
   MainScreen --> OpenGLScene
-  MainScreen --> ObjLoader
   MainScreen --> ShapeType
 
   SceneObjectState --> TransformState
@@ -56,13 +54,13 @@ flowchart LR
   OpenGLScene --> OpenGLSceneScope
   OpenGLScene --> GLRenderer
   OpenGLSceneScope --> ShapeTransformScope
-  OpenGLSceneScope --> ShapeDescription
-  ShapeDescription --> TransformState
-  ShapeDescription --> ShapeType
+  OpenGLSceneScope --> SceneShape
+  OpenGLSceneScope --> ShapeDefinition
+  OpenGLSceneScope --> ShapeData
+  OpenGLSceneScope --> ObjLoader
 
   GLRenderer --> Scene
-  GLRenderer --> ShapeDefinition
-  GLRenderer --> ShapeDescription
+  GLRenderer --> SceneShape
   Scene --> SceneShape
   SceneShape --> ShapeData
 
@@ -73,6 +71,5 @@ flowchart LR
   Pyramid -.implements.-> ShapeDefinition
 
   ObjLoader --> ObjMeshData
-  ObjMeshData --> SceneObjectState
-  SceneObjectState --> OpenGLSceneScope
+  SceneObjectState --> OpenGLSceneScope : applyTransformState via DSL
 ```

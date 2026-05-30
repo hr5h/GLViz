@@ -4,27 +4,23 @@
 classDiagram
 direction LR
 
+class OpenGLSceneScope {
+  -shapes: MutableList~SceneShape~
+  -addShape(type, block)
+  +Model(modelPath, ...)
+}
+
 class Scene {
   -_shapes: MutableList~SceneShape~
   +shapes: List~SceneShape~
   +addShape(shapeData, modelMatrix?)
   +clearShapes()
+  +replaceShapes(shapes)
 }
 
 class SceneShape {
   +shapeData: ShapeData
   +modelMatrix: FloatArray
-}
-
-class ShapeDescription {
-  +type: ShapeType
-  +transformState: TransformState
-  +customVertices: FloatArray?
-  +customColor: FloatArray?
-  +customVertexColors: FloatArray?
-  +customTexCoords: FloatArray?
-  +customTexturePath: String?
-  +buildModelMatrix(): FloatArray
 }
 
 class TransformState {
@@ -59,12 +55,14 @@ class ShapeType {
   MODEL
 }
 
-Scene "1" o-- "*" SceneShape
+OpenGLSceneScope "1" o-- "*" SceneShape : builds in SideEffect
+Scene "1" o-- "*" SceneShape : runtime copy on GL thread
 SceneShape --> ShapeData
-ShapeDescription --> TransformState
-ShapeDescription --> ShapeType
+OpenGLSceneScope ..> TransformState : via ShapeTransformScope
+OpenGLSceneScope ..> ShapeType : primitive lookup
 TransformState --> Vector3
 
-note for ShapeDescription "Declarative DSL snapshot.\nConverted to SceneShape in GLRenderer.rebuildScene()."
-note for SceneShape "Runtime render entity:\ngeometry + model matrix."
+note for OpenGLSceneScope "Resolves geometry and transforms\ninto SceneShape before sync."
+note for SceneShape "Render entity: geometry + model matrix."
+note for Scene "replaceShapes() atomically updates\nthe drawable list from pendingSync."
 ```

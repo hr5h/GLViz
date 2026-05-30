@@ -6,20 +6,13 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.GLUtils
 import android.opengl.Matrix
-import hr5h.glviz.shapes.CubeShape
-import hr5h.glviz.shapes.PyramidShape
-import hr5h.glviz.shapes.ShapeData
-import hr5h.glviz.shapes.ShapeDefinition
-import hr5h.glviz.shapes.ShapeType
-import hr5h.glviz.shapes.SquareShape
-import hr5h.glviz.shapes.TriangleShape
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 /**
- * Рендерер низкого уровня: получает декларативное описание сцены и рисует её через OpenGL ES.
+ * Рендерер низкого уровня: получает готовые сущности сцены и рисует их через OpenGL ES.
  */
-class GLRenderer(
+internal class GLRenderer(
     private val assetManager: AssetManager
 ) : GLSurfaceView.Renderer {
 
@@ -52,50 +45,14 @@ class GLRenderer(
         }
     """.trimIndent()
 
-    private val shapeDefinitions: Map<ShapeType, ShapeDefinition> = mapOf(
-        ShapeType.TRIANGLE to TriangleShape,
-        ShapeType.SQUARE to SquareShape,
-        ShapeType.CUBE to CubeShape,
-        ShapeType.PYRAMID to PyramidShape
-    )
-
     private val scene = Scene()
     private val textureCache = mutableMapOf<String, Int>()
 
     @Volatile
-    private var pendingSync: List<ShapeDescription>? = null
+    private var pendingSync: List<SceneShape>? = null
 
-    fun syncScene(descriptions: List<ShapeDescription>) {
-        pendingSync = ArrayList(descriptions)
-    }
-
-    private fun rebuildScene(descriptions: List<ShapeDescription>) {
-        scene.clearShapes()
-
-        for (desc in descriptions) {
-            val matrix = desc.buildModelMatrix()
-
-            if (desc.type == ShapeType.MODEL && desc.customVertices != null) {
-                val hasTexture = desc.customTexturePath != null && desc.customTexCoords != null
-                val color = when {
-                    hasTexture && desc.customVertexColors == null ->
-                        floatArrayOf(1f, 1f, 1f, 1f)
-                    else -> desc.customColor ?: floatArrayOf(0.7f, 0.5f, 0.3f, 1f)
-                }
-                val shapeData = ShapeData.createShapeData(
-                    vertices = desc.customVertices,
-                    color = color,
-                    vertexColors = desc.customVertexColors,
-                    texCoords = desc.customTexCoords,
-                    textureAssetPath = desc.customTexturePath
-                )
-                scene.addShape(shapeData, matrix)
-            } else {
-                shapeDefinitions[desc.type]?.createShapeDataList()?.forEach { shapeData ->
-                    scene.addShape(shapeData, matrix.copyOf())
-                }
-            }
-        }
+    fun syncScene(shapes: List<SceneShape>) {
+        pendingSync = ArrayList(shapes)
     }
 
     private var program: Int = 0
@@ -131,9 +88,9 @@ class GLRenderer(
     }
 
     override fun onDrawFrame(gl: GL10?) {
-        pendingSync?.let { descs ->
+        pendingSync?.let { shapes ->
             pendingSync = null
-            rebuildScene(descs)
+            scene.replaceShapes(shapes)
         }
 
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
@@ -183,7 +140,7 @@ class GLRenderer(
                     shapeData.texCoordBuffer
                 )
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, getTextureId(shapeData.textureAssetPath!!))
+                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, getTextureId(shapeData.textureAssetPath))
                 GLES20.glUniform1i(textureHandle, 0)
                 GLES20.glUniform1i(useTextureHandle, 1)
             } else {

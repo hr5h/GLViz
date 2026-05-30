@@ -6,7 +6,7 @@ import hr5h.glviz.shapes.ShapeData
  * Сцена — коллекция сущностей (SceneShape) для отрисовки.
  * Управление списком фигур отделено от рендерера.
  */
-class Scene {
+internal class Scene {
 
     private val _shapes = mutableListOf<SceneShape>()
     val shapes: List<SceneShape> get() = _shapes
@@ -21,5 +21,10 @@ class Scene {
 
     fun clearShapes() {
         _shapes.clear()
+    }
+
+    fun replaceShapes(shapes: List<SceneShape>) {
+        _shapes.clear()
+        _shapes.addAll(shapes)
     }
 }

@@ -13,18 +13,16 @@ class GLSurfaceView_Renderer {
 
 class GLRenderer {
   -assetManager: AssetManager
-  -shapeDefinitions: Map~ShapeType, ShapeDefinition~
   -scene: Scene
   -textureCache: Map~String, Int~
-  -pendingSync: List~ShapeDescription~?
+  -pendingSync: List~SceneShape~?
   -program: Int
   -mvpMatrixHandle: Int
   -textureHandle: Int
   -useTextureHandle: Int
   -projectionMatrix: FloatArray
   -viewMatrix: FloatArray
-  +syncScene(descriptions)
-  -rebuildScene(descriptions)
+  +syncScene(shapes)
   -getTextureId(assetPath): Int
   -loadTextureFromAssets(assetPath): Int
   -loadShader(type, code): Int
@@ -33,40 +31,29 @@ class GLRenderer {
   +onDrawFrame(gl)
 }
 
-class ShapeDefinition {
-  <<sealed interface>>
-  +createShapeDataList(): List~ShapeData~
+class Scene {
+  +replaceShapes(shapes)
+  +shapes: List~SceneShape~
 }
 
-class TriangleShape
-class SquareShape
-class CubeShape
-class PyramidShape
-
-class ShapeDescription {
-  +type: ShapeType
-  +transformState: TransformState
-  +customVertices: FloatArray?
-  +customColor: FloatArray?
-  +customVertexColors: FloatArray?
-  +customTexCoords: FloatArray?
-  +customTexturePath: String?
-  +buildModelMatrix(): FloatArray
+class SceneShape {
+  +shapeData: ShapeData
+  +modelMatrix: FloatArray
 }
 
-class Scene
-class SceneShape
-class ShapeData
+class ShapeData {
+  +vertexBuffer: FloatBuffer
+  +vertexCount: Int
+  +colorBuffer: FloatBuffer?
+  +texCoordBuffer: FloatBuffer?
+  +textureAssetPath: String?
+}
 
 GLSurfaceView_Renderer <|.. GLRenderer
 GLRenderer --> Scene
-GLRenderer --> ShapeDescription : sync input
-GLRenderer --> ShapeDefinition : primitives only
-GLRenderer --> ShapeData : via SceneShape
-ShapeDefinition <|.. TriangleShape
-ShapeDefinition <|.. SquareShape
-ShapeDefinition <|.. CubeShape
-ShapeDefinition <|.. PyramidShape
+GLRenderer --> SceneShape : sync input
 Scene "1" o-- "*" SceneShape
 SceneShape --> ShapeData
+
+note for GLRenderer "No geometry resolution here.\nReceives ready SceneShape list\nfrom OpenGLSceneScope via syncScene()."
 ```

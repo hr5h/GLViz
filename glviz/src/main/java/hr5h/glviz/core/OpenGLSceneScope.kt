@@ -2,10 +2,16 @@ package hr5h.glviz.core
 
 import android.content.res.AssetManager
 import hr5h.glviz.models.ObjLoader
+import hr5h.glviz.shapes.CubeShape
+import hr5h.glviz.shapes.PyramidShape
+import hr5h.glviz.shapes.ShapeData
+import hr5h.glviz.shapes.ShapeDefinition
 import hr5h.glviz.shapes.ShapeType
+import hr5h.glviz.shapes.SquareShape
+import hr5h.glviz.shapes.TriangleShape
 
 @DslMarker
-annotation class SceneDsl
+internal annotation class SceneDsl
 
 @SceneDsl
 class ShapeTransformScope internal constructor() {
@@ -29,23 +35,11 @@ class ShapeTransformScope internal constructor() {
     }
 }
 
-class ShapeDescription internal constructor(
-    val type: ShapeType,
-    val transformState: TransformState = TransformState(),
-    val customVertices: FloatArray? = null,
-    val customColor: FloatArray? = null,
-    val customVertexColors: FloatArray? = null,
-    val customTexCoords: FloatArray? = null,
-    val customTexturePath: String? = null,
-) {
-    fun buildModelMatrix(): FloatArray = transformState.buildModelMatrix()
-}
-
 @SceneDsl
 class OpenGLSceneScope internal constructor(
     private val assetManager: AssetManager,
 ) {
-    internal val shapes = mutableListOf<ShapeDescription>()
+    internal val shapes = mutableListOf<SceneShape>()
 
     fun Triangle(block: ShapeTransformScope.() -> Unit = {}) {
         addShape(ShapeType.TRIANGLE, block)
@@ -73,26 +67,36 @@ class OpenGLSceneScope internal constructor(
         if (mesh.vertices.size < 9) return
 
         val scope = ShapeTransformScope().apply(block)
-        shapes.add(
-            ShapeDescription(
-                type = ShapeType.MODEL,
-                transformState = scope.transformState,
-                customVertices = mesh.vertices,
-                customColor = color,
-                customVertexColors = mesh.vertexColors,
-                customTexCoords = mesh.texCoords,
-                customTexturePath = texturePath,
-            )
+        val matrix = scope.transformState.buildModelMatrix()
+        val hasTexture = texturePath != null && mesh.texCoords != null
+        val modelColor = when {
+            hasTexture && mesh.vertexColors == null -> floatArrayOf(1f, 1f, 1f, 1f)
+            else -> color
+        }
+        val shapeData = ShapeData.createShapeData(
+            vertices = mesh.vertices,
+            color = modelColor,
+            vertexColors = mesh.vertexColors,
+            texCoords = mesh.texCoords,
+            textureAssetPath = texturePath,
         )
+        shapes.add(SceneShape(shapeData, modelMatrix = matrix))
     }
 
     private fun addShape(type: ShapeType, block: ShapeTransformScope.() -> Unit) {
         val scope = ShapeTransformScope().apply(block)
-        shapes.add(
-            ShapeDescription(
-                type = type,
-                transformState = scope.transformState,
-            )
+        val matrix = scope.transformState.buildModelMatrix()
+        shapeDefinitions[type]?.createShapeDataList()?.forEach { shapeData ->
+            shapes.add(SceneShape(shapeData, modelMatrix = matrix.copyOf()))
+        }
+    }
+
+    private companion object {
+        private val shapeDefinitions: Map<ShapeType, ShapeDefinition> = mapOf(
+            ShapeType.TRIANGLE to TriangleShape,
+            ShapeType.SQUARE to SquareShape,
+            ShapeType.CUBE to CubeShape,
+            ShapeType.PYRAMID to PyramidShape,
         )
     }
 }

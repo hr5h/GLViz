@@ -51,6 +51,8 @@ object PyramidShape : ShapeDefinition {
         return list
     }
 
-    override fun createShapeDataList(): List<ShapeData> =
-        newInstance().map { (vertices, color) -> ShapeData.Companion.createShapeData(vertices, color) }
+    override fun createShapeDataList(color: FloatArray?): List<ShapeData> =
+        newInstance().map { (vertices, defaultColor) ->
+            ShapeData.createShapeData(vertices, color ?: defaultColor)
+        }
 }

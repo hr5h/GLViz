@@ -1,68 +1,27 @@
 # UML: Scene and Domain Geometry Layer
 
 ```mermaid
-classDiagram
-direction LR
+flowchart LR
+    Scope["OpenGLSceneScope<br/>builds SceneShape list"]
+    ShapeType["ShapeType<br/>TRIANGLE / SQUARE / CUBE / PYRAMID / MODEL"]
+    Transform["TransformState<br/>translation / rotation / scale"]
+    Vector["Vector3<br/>x / y / z"]
+    SceneShape["SceneShape<br/>shapeData + modelMatrix"]
+    ShapeData["ShapeData<br/>vertices / color / texture / vertexCount"]
+    Scene["Scene<br/>replaceShapes() updates runtime list"]
 
-class OpenGLSceneScope {
-  -shapes: MutableList~SceneShape~
-  -addShape(type, block)
-  +Model(modelPath, ...)
-}
+    Scope --> ShapeType
+    Scope --> Transform
+    Transform --> Vector
+    Scope --> SceneShape
+    SceneShape --> ShapeData
+    Scene --> SceneShape
 
-class Scene {
-  -_shapes: MutableList~SceneShape~
-  +shapes: List~SceneShape~
-  +addShape(shapeData, modelMatrix?)
-  +clearShapes()
-  +replaceShapes(shapes)
-}
-
-class SceneShape {
-  +shapeData: ShapeData
-  +modelMatrix: FloatArray
-}
-
-class TransformState {
-  +translation: Vector3
-  +rotation: Vector3
-  +scale: Vector3
-  +buildModelMatrix(): FloatArray
-}
-
-class Vector3 {
-  +x: Float
-  +y: Float
-  +z: Float
-}
-
-class ShapeData {
-  +vertexBuffer: FloatBuffer
-  +color: FloatArray
-  +colorBuffer: FloatBuffer?
-  +texCoordBuffer: FloatBuffer?
-  +textureAssetPath: String?
-  +vertexCount: Int
-  +createShapeData(...): ShapeData
-}
-
-class ShapeType {
-  <<enumeration>>
-  TRIANGLE
-  SQUARE
-  CUBE
-  PYRAMID
-  MODEL
-}
-
-OpenGLSceneScope "1" o-- "*" SceneShape : builds in SideEffect
-Scene "1" o-- "*" SceneShape : runtime copy on GL thread
-SceneShape --> ShapeData
-OpenGLSceneScope ..> TransformState : via ShapeTransformScope
-OpenGLSceneScope ..> ShapeType : primitive lookup
-TransformState --> Vector3
-
-note for OpenGLSceneScope "Resolves geometry and transforms\ninto SceneShape before sync."
-note for SceneShape "Render entity: geometry + model matrix."
-note for Scene "replaceShapes() atomically updates\nthe drawable list from pendingSync."
+    style Scope fill:#ffffff,stroke:#000000,color:#000000
+    style ShapeType fill:#ffffff,stroke:#000000,color:#000000
+    style Transform fill:#ffffff,stroke:#000000,color:#000000
+    style Vector fill:#ffffff,stroke:#000000,color:#000000
+    style SceneShape fill:#ffffff,stroke:#000000,color:#000000
+    style ShapeData fill:#ffffff,stroke:#000000,color:#000000
+    style Scene fill:#ffffff,stroke:#000000,color:#000000
 ```

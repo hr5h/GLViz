@@ -7,5 +7,5 @@ package hr5h.glviz.shapes
 sealed interface ShapeDefinition {
 
     /** Возвращает список сегментов геометрии (вершины + цвет) для отрисовки. */
-    fun createShapeDataList(): List<ShapeData>
+    fun createShapeDataList(color: FloatArray? = null): List<ShapeData>
 }

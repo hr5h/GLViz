@@ -41,32 +41,46 @@ class OpenGLSceneScope internal constructor(
 ) {
     internal val shapes = mutableListOf<SceneShape>()
 
-    fun Triangle(block: ShapeTransformScope.() -> Unit = {}) {
-        addShape(ShapeType.TRIANGLE, block)
+    fun Triangle(
+        color: FloatArray? = null,
+        block: (ShapeTransformScope.() -> Unit)? = null,
+    ) {
+        addShape(ShapeType.TRIANGLE, color, block)
     }
 
-    fun Square(block: ShapeTransformScope.() -> Unit = {}) {
-        addShape(ShapeType.SQUARE, block)
+    fun Square(
+        color: FloatArray? = null,
+        block: (ShapeTransformScope.() -> Unit)? = null,
+    ) {
+        addShape(ShapeType.SQUARE, color, block)
     }
 
-    fun Cube(block: ShapeTransformScope.() -> Unit = {}) {
-        addShape(ShapeType.CUBE, block)
+    fun Cube(
+        color: FloatArray? = null,
+        block: (ShapeTransformScope.() -> Unit)? = null,
+    ) {
+        addShape(ShapeType.CUBE, color, block)
     }
 
-    fun Pyramid(block: ShapeTransformScope.() -> Unit = {}) {
-        addShape(ShapeType.PYRAMID, block)
+    fun Pyramid(
+        color: FloatArray? = null,
+        block: (ShapeTransformScope.() -> Unit)? = null,
+    ) {
+        addShape(ShapeType.PYRAMID, color, block)
     }
 
     fun Model(
         modelPath: String,
         texturePath: String? = null,
         color: FloatArray = floatArrayOf(0.7f, 0.5f, 0.3f, 1f),
-        block: ShapeTransformScope.() -> Unit = {},
+        block: (ShapeTransformScope.() -> Unit)? = null,
     ) {
         val mesh = ObjLoader.load(assetManager, modelPath) ?: return
         if (mesh.vertices.size < 9) return
 
-        val scope = ShapeTransformScope().apply(block)
+        val scope = ShapeTransformScope().also { transformScope ->
+            block?.let { transformScope.it() }
+        }
         val matrix = scope.transformState.buildModelMatrix()
         val hasTexture = texturePath != null && mesh.texCoords != null
         val modelColor = when {
@@ -83,10 +97,16 @@ class OpenGLSceneScope internal constructor(
         shapes.add(SceneShape(shapeData, modelMatrix = matrix))
     }
 
-    private fun addShape(type: ShapeType, block: ShapeTransformScope.() -> Unit) {
-        val scope = ShapeTransformScope().apply(block)
+    private fun addShape(
+        type: ShapeType,
+        color: FloatArray?,
+        block: (ShapeTransformScope.() -> Unit)?,
+    ) {
+        val scope = ShapeTransformScope().also { transformScope ->
+            block?.let { transformScope.it() }
+        }
         val matrix = scope.transformState.buildModelMatrix()
-        shapeDefinitions[type]?.createShapeDataList()?.forEach { shapeData ->
+        shapeDefinitions[type]?.createShapeDataList(color)?.forEach { shapeData ->
             shapes.add(SceneShape(shapeData, modelMatrix = matrix.copyOf()))
         }
     }

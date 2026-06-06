@@ -15,8 +15,8 @@ object SquareShape : ShapeDefinition {
         return Pair(vertices, color)
     }
 
-    override fun createShapeDataList(): List<ShapeData> {
-        val (vertices, color) = newInstance()
-        return listOf(ShapeData.createShapeData(vertices, color))
+    override fun createShapeDataList(color: FloatArray?): List<ShapeData> {
+        val (vertices, defaultColor) = newInstance()
+        return listOf(ShapeData.createShapeData(vertices, color ?: defaultColor))
     }
 }
